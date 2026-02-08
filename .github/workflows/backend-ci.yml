@@ -33,9 +33,11 @@ jobs:
 
       - name: Install the project
         run: uv sync --locked --all-extras --dev
+        working-directory: backend
       
       - name: Run tests
         run: uv run pytest
+        working-directory: backend
 
   build:
     name: Build and publish Docker image
