@@ -14,10 +14,17 @@ uv sync
 
 ### Commands
 
-- `uv run fastapi dev` - Start the development server with hot reload
-- `uv run pytest` - Run the test suite
-- `uv run ruff check` - Check code for linting issues
-- `uv run ruff check --fix` - Automatically fix linting issues
-- `uv run ruff format` - Format code according to style guide
-- `docker build -t fitstack-backend .` - Build docker container
-- `docker run -p 8000:80 fitstack-backend` - Run docker container
+- Development
+	- `uv run fastapi dev` — Start the development server with hot reload
+
+- Testing
+	- `uv run pytest` — Run the test suite
+
+- Lint & Format
+	- `uv run ruff check` — Check code for linting issues
+	- `uv run ruff check --fix` — Automatically fix linting issues
+	- `uv run ruff format` — Format code according to style guide
+
+- Docker
+	- Build: `docker build -t fitstack-backend .` — Build Docker container (uses `backend/Dockerfile`)
+	- Run: `docker run -p 8000:80 fitstack-backend` — Run Docker container; maps port `8000` → container port `80`
