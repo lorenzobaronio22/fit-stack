@@ -1,18 +1,20 @@
-name: Backend CI
+name: Backend CD
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 on:
   workflow_dispatch: {}
-  pull_request:
+  push:
+    branches:
+      - 'main'
     paths:
       - 'backend/**'
 
 jobs:
-  lint:
-    name: Lint backend
+  release:
+    name: Build and Publish Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -27,47 +29,15 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-
-      - name: Install the project
-        run: uv sync --locked --all-extras --dev
-        working-directory: backend
       
-      - name: Lint code with ruff
-        run: uv run ruff check
+      - name: Tag Version
+        id: tag
+        run: |
+          export VERSION=v$(uv version --short)
+          git tag $VERSION
+          git push origin $VERSION
+          echo "name=$VERSION" >> $GITHUB_OUTPUT
         working-directory: backend
-
-  test:
-    name: Test backend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version-file: backend/pyproject.toml
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Install the project
-        run: uv sync --locked --all-extras --dev
-        working-directory: backend
-      
-      - name: Run tests
-        run: uv run pytest
-        working-directory: backend
-
-  build:
-    name: Build and publish Docker image
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
 
       - name: Docker meta
         id: meta
@@ -75,6 +45,10 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository }}-backend
+          tags: |
+            type=raw,value=${{ steps.tag.outputs.name }}
+          flavor: |
+            latest=auto
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -88,7 +62,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
 
       - name: Build and push image
         uses: docker/build-push-action@v6
