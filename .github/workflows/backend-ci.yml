@@ -5,15 +5,37 @@ permissions:
   packages: write
 
 on:
-  push:
-    paths:
-      - 'backend/**'
   pull_request:
     paths:
       - 'backend/**'
   workflow_dispatch: {}
 
 jobs:
+  lint:
+    name: Test backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: backend/pyproject.toml
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+        working-directory: backend
+      
+      - name: Lint code with ruff
+        run: uv run ruff check
+        working-directory: backend
+
   test:
     name: Test backend
     runs-on: ubuntu-latest
